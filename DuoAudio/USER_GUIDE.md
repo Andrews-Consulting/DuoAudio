@@ -61,7 +61,7 @@ Click the **"Start Duplication"** button. The status will change to "Active" and
 
 ### Step 5: Stop Duplication
 
-Click the **"Stop"** button to stop the audio duplication. The status will return to "Idle".
+Click the **"Stop"** button to stop the DuoAudio. The status will return to "Idle".
 
 ## Advanced Features
 

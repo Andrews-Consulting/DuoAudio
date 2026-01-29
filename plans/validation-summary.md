@@ -1,4 +1,4 @@
-# Audio Duplication Application - Requirements Validation
+# DuoAudio Application - Requirements Validation
 
 **Date**: 2026-01-28  
 **Status**: ✅ All requirements validated - Ready to proceed with implementation
@@ -57,7 +57,7 @@ These packages will be added via NuGet when creating the project:
 
 ## 🚀 Ready to Proceed
 
-You have everything needed to implement the Audio Duplication Application:
+You have everything needed to implement the DuoAudio Application:
 
 ### Next Steps
 1. Switch to **Code mode** to begin implementation
@@ -87,7 +87,7 @@ dotnet --version
 dotnet --list-sdks
 
 # Create new WPF project (when ready)
-dotnet new wpf -n AudioDuplication
+dotnet new wpf -n DuoAudio
 
 # Add NAudio package
 dotnet add package NAudio
@@ -95,15 +95,15 @@ dotnet add package NAudio
 
 ### Project Structure
 ```
-AudioDuplication/
-├── AudioDuplication.sln
-├── AudioDuplication/
+DuoAudio/
+├── DuoAudio.sln
+├── DuoAudio/
 │   ├── App.xaml
 │   ├── App.xaml.cs
 │   ├── MainWindow.xaml
 │   ├── MainWindow.xaml.cs
 │   ├── ViewModels/
-│   │   └── AudioDuplicationViewModel.cs
+│   │   └── DuoAudioViewModel.cs
 │   ├── Services/
 │   │   ├── IAudioDeviceEnumerator.cs
 │   │   ├── AudioDeviceEnumerator.cs
@@ -125,4 +125,4 @@ AudioDuplication/
 
 ## ✨ Conclusion
 
-**All requirements validated successfully!** You are ready to proceed with implementation. Switch to Code mode when you're ready to start building the Audio Duplication Application.
+**All requirements validated successfully!** You are ready to proceed with implementation. Switch to Code mode when you're ready to start building the DuoAudio Application.

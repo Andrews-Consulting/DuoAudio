@@ -1,0 +1,127 @@
+<Window x:Class="DuoAudio.DiagnosticsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:DuoAudio"
+        mc:Ignorable="d"
+        Title="Audio Diagnostics" Height="700" Width="800">
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <TextBlock Grid.Row="0" Text="Audio Diagnostics Tool" FontSize="18" FontWeight="Bold" Margin="0,0,0,10"/>
+        
+        <!-- Device Selection -->
+        <GroupBox Grid.Row="1" Header="Device Selection" Margin="0,0,0,10">
+            <Grid Margin="10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                
+                <TextBlock Grid.Row="0" Text="Source Device (for capture):" FontWeight="Bold"/>
+                <ComboBox Grid.Row="1" x:Name="SourceDeviceComboBox" Margin="0,5,0,10" SelectionChanged="OnSourceDeviceChanged"/>
+                
+                <TextBlock Grid.Row="2" Text="Destination Device (for playback):" FontWeight="Bold"/>
+                <ComboBox Grid.Row="3" x:Name="DestinationDeviceComboBox" Margin="0,5,0,0" SelectionChanged="OnDestinationDeviceChanged"/>
+            </Grid>
+        </GroupBox>
+
+        <!-- Device Info -->
+        <GroupBox Grid.Row="2" Header="Device Information" Margin="0,0,0,10">
+            <Grid Margin="10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                
+                <TextBlock Grid.Row="0" Grid.Column="0" Text="Source Format: " FontWeight="Bold"/>
+                <TextBlock Grid.Row="0" Grid.Column="1" x:Name="SourceFormatText" Text="Not selected"/>
+                
+                <TextBlock Grid.Row="1" Grid.Column="0" Text="Destination Format: " FontWeight="Bold"/>
+                <TextBlock Grid.Row="1" Grid.Column="1" x:Name="DestinationFormatText" Text="Not selected"/>
+                
+                <TextBlock Grid.Row="2" Grid.Column="0" Text="Formats Match: " FontWeight="Bold"/>
+                <TextBlock Grid.Row="2" Grid.Column="1" x:Name="FormatsMatchText" Text="N/A"/>
+                
+                <TextBlock Grid.Row="3" Grid.Column="0" Text="Windows Default Output: " FontWeight="Bold"/>
+                <TextBlock Grid.Row="3" Grid.Column="1" x:Name="WindowsDefaultText" Text="Checking..."/>
+            </Grid>
+        </GroupBox>
+
+        <!-- Test Controls -->
+        <GroupBox Grid.Row="3" Header="Test Controls" Margin="0,0,0,10">
+            <StackPanel Margin="10" Orientation="Horizontal">
+                <Button x:Name="TestCaptureButton" Content="Test Capture Only" Width="150" Margin="0,0,10,0" Padding="10,5" Click="OnTestCaptureClick"/>
+                <Button x:Name="TestPlaybackButton" Content="Test Playback Only" Width="150" Margin="0,0,10,0" Padding="10,5" Click="OnTestPlaybackClick"/>
+                <Button x:Name="TestFullDupButton" Content="Test Full Duplication" Width="150" Margin="0,0,10,0" Padding="10,5" Click="OnTestFullDupClick"/>
+                <Button x:Name="StopTestButton" Content="Stop Test" Width="100" Padding="10,5" Click="OnStopTestClick" IsEnabled="False"/>
+            </StackPanel>
+        </GroupBox>
+
+        <!-- Audio Meters -->
+        <GroupBox Grid.Row="4" Header="Audio Activity Meters" Margin="0,0,0,10">
+            <Grid Margin="10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                
+                <TextBlock Grid.Row="0" Text="Capture Activity (Source):" FontWeight="Bold"/>
+                <ProgressBar Grid.Row="1" x:Name="CaptureMeter" Height="20" Minimum="0" Maximum="100" Value="0" Margin="0,5,0,10"/>
+                
+                <TextBlock Grid.Row="2" Text="Playback Activity (Destination):" FontWeight="Bold"/>
+                <ProgressBar Grid.Row="3" x:Name="PlaybackMeter" Height="20" Minimum="0" Maximum="100" Value="0" Margin="0,5,0,0"/>
+            </Grid>
+        </GroupBox>
+
+        <!-- Latency Measurement -->
+        <GroupBox Grid.Row="5" Header="Latency Measurement" Margin="0,0,0,10">
+            <Grid Margin="10">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                
+                <TextBlock Grid.Row="0" Text="Estimated Latency:" FontWeight="Bold"/>
+                <TextBlock Grid.Row="1" x:Name="LatencyText" Text="N/A" Margin="0,5,0,10" FontSize="14" FontWeight="Bold" Foreground="Blue"/>
+                
+                <TextBlock Grid.Row="2" Text="Buffer Configuration:" FontWeight="Bold" Margin="0,10,0,0"/>
+                <TextBlock Grid.Row="3" x:Name="BufferConfigText" Text="N/A" Margin="0,5,0,0"/>
+            </Grid>
+        </GroupBox>
+
+        <!-- Log Output -->
+        <GroupBox Grid.Row="6" Header="Diagnostic Log">
+            <Grid>
+                <TextBox x:Name="LogTextBox" 
+                         IsReadOnly="True" 
+                         VerticalScrollBarVisibility="Auto" 
+                         HorizontalScrollBarVisibility="Auto"
+                         FontFamily="Consolas"
+                         FontSize="11"
+                         TextWrapping="Wrap"/>
+            </Grid>
+        </GroupBox>
+    </Grid>
+</Window>

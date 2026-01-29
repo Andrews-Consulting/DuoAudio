@@ -10,7 +10,7 @@ A Windows WPF application that intercepts audio from a source device and duplica
 - **Loopback Capture**: Can capture system audio (what you hear) from output devices
 - **Bluetooth Auto-Reconnect**: Optional feature to monitor and reconnect Bluetooth devices
 - **Run at Startup**: Automatically start duplication when Windows starts (with UI hidden to system tray)
-- **System Tray Integration**: Minimize to system tray while DuoAudio continues in background
+- **System Tray Integration**: Minimize to system tray while audio duplication continues in background
 - **Single Instance**: Only one instance of the application runs at a time
 - **MVVM Architecture**: Clean separation of concerns with Model-View-ViewModel pattern
 
@@ -65,7 +65,7 @@ bin/Debug/net9.0-windows/DuoAudio.exe
 4. The application will be added to Windows startup folder
 5. On next Windows restart, the application will:
    - Start automatically with the selected devices
-   - Begin audio duplication immediately
+   - Begin DuoAudio immediately
    - Hide the UI to the system tray
    - Continue running in the background
 

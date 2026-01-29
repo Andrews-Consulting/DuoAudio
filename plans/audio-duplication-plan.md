@@ -1,4 +1,4 @@
-# Audio Duplication Application - Implementation Plan
+# DuoAudio Application - Implementation Plan
 
 ## Project Overview
 Create a Windows application that intercepts audio destined for a specific device and duplicates that audio to a second device.
@@ -15,7 +15,7 @@ Create a Windows application that intercepts audio destined for a specific devic
 graph TB
     subgraph UI Layer
         MainWindow[MainWindow.xaml]
-        ViewModel[AudioDuplicationViewModel]
+        ViewModel[DuoAudioViewModel]
     end
     
     subgraph Services Layer
@@ -47,15 +47,15 @@ graph TB
 ## Project Structure
 
 ```
-AudioDuplication/
-├── AudioDuplication.sln
-├── AudioDuplication/
+DuoAudio/
+├── DuoAudio.sln
+├── DuoAudio/
 │   ├── App.xaml
 │   ├── App.xaml.cs
 │   ├── MainWindow.xaml
 │   ├── MainWindow.xaml.cs
 │   ├── ViewModels/
-│   │   └── AudioDuplicationViewModel.cs
+│   │   └── DuoAudioViewModel.cs
 │   ├── Services/
 │   │   ├── IAudioDeviceEnumerator.cs
 │   │   ├── AudioDeviceEnumerator.cs
@@ -91,7 +91,7 @@ AudioDuplication/
 **Layout:**
 ```
 +----------------------------------+
-| Audio Duplication Application    |
+| DuoAudio Application    |
 +----------------------------------+
 | Source Device:    [Dropdown v]   |
 | Destination Dev:  [Dropdown v]   |
