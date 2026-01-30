@@ -33,9 +33,9 @@ REQUIREMENTS
 ------------
 - Windows 10 or Windows 11
 - At least 2 audio output devices
-- .NET 9.0 Runtime (included in this self-contained build)
+- .NET 9.0 Runtime installed
 
-END USER FILES
+END USER FILES (once built)
 -----
 - DuoAudio.exe - The application (single file, self-contained)
 - README.txt - This file
@@ -54,7 +54,8 @@ You can build the application using the following command:  (assumes .NET 9.0 SD
     Dotnet Build -c [Debug | Release]
 Publish it with: (this command assumes working directory is DuoAudio)
     dotnet publish -c Release -r win-x64 --self-contained false -o "../publish"
-Build the installer file with: (assumes Inno Setup is installed)
+That will generate the executable file in the publish folder. 
+Build the distributable installer file with: (assumes Inno Setup is installed)
     Build-Installer.bat
 
 AI placed the build files in interesting locations.  I'll move them to a more logical place in the future.
