@@ -361,12 +361,23 @@ public partial class MainWindow : Window
                 // Get buffer configuration from slider
                 var bufferConfig = (int)BufferConfigSlider.Value;
 
-                // Create new capture and playback services with selected devices
+                // Calculate ring buffer size based on configuration
+                // Default to 48kHz, stereo, 16-bit (4 bytes per sample)
+                int sampleRate = 48000;
+                int channels = 2;
+                int bytesPerSample = 2;
+                int bufferDurationMs = GetBufferDurationForConfig(bufferConfig);
+                int bufferSize = (sampleRate * channels * bytesPerSample * bufferDurationMs) / 1000;
+
+                // Create shared ring buffer
+                var ringBuffer = new AudioRingBuffer(bufferSize);
+
+                // Create new capture and playback services with selected devices and shared ring buffer
                 var captureService = new AudioCaptureService();
-                captureService.Initialize(_viewModel.SelectedSourceDevice.Id, bufferConfig);
+                captureService.Initialize(_viewModel.SelectedSourceDevice.Id, ringBuffer);
 
                 var playbackService = new AudioPlaybackService();
-                playbackService.Initialize(_viewModel.SelectedDestinationDevice.Id, bufferConfig);
+                playbackService.Initialize(_viewModel.SelectedDestinationDevice.Id, ringBuffer);
 
                 // Create new duplication worker
                 var duplicationWorker = new AudioDuplicationWorker(captureService, playbackService);
@@ -374,13 +385,29 @@ public partial class MainWindow : Window
                 // Update ViewModel with new worker using the new method
                 _viewModel.SetDuplicationWorker(duplicationWorker);
 
-                System.Diagnostics.Debug.WriteLine($"Duplication worker created successfully for source: {_viewModel.SelectedSourceDevice.Name}, destination: {_viewModel.SelectedDestinationDevice.Name}, buffer config: {GetBufferConfigLabel(bufferConfig)}");
+                System.Diagnostics.Debug.WriteLine($"Duplication worker created successfully for source: {_viewModel.SelectedSourceDevice.Name}, destination: {_viewModel.SelectedDestinationDevice.Name}, buffer config: {GetBufferConfigLabel(bufferConfig)}, buffer size: {bufferSize} bytes");
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Error creating duplication worker: {ex.Message}");
                 _viewModel.Status = $"Error initializing worker: {ex.Message}";
             }
+        }
+
+        /// <summary>
+        /// Gets the buffer duration in milliseconds for a given configuration
+        /// </summary>
+        private int GetBufferDurationForConfig(int config)
+        {
+            return config switch
+            {
+                1 => 20,   // Low Latency
+                2 => 50,   // Low-Medium
+                3 => 100,  // Balanced (default)
+                4 => 200,  // Medium-High
+                5 => 500,  // High Stability
+                _ => 100    // Default to balanced
+            };
         }
 
     /// <summary>

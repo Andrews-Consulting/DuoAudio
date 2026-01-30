@@ -7,27 +7,24 @@ namespace DuoAudio.Services
     {
         private WasapiCapture? _capture;
         private string? _deviceId;
-        private readonly Queue<byte[]> _audioBuffer = new();
-        private readonly object _bufferLock = new();
+        private AudioRingBuffer? _ringBuffer;
         private bool _isCapturing;
         private bool _isDisposed;
-        private int _bufferConfig = 3; // Default to balanced
 
         public bool IsCapturing => _isCapturing;
 
-        public event EventHandler<byte[]>? DataAvailable;
         public event EventHandler<Exception>? CaptureError;
         public event EventHandler? DeviceDisconnected;
 
         public void Initialize(string deviceId)
         {
-            Initialize(deviceId, 3); // Default to balanced
+            throw new InvalidOperationException("Use Initialize(string deviceId, AudioRingBuffer ringBuffer) instead.");
         }
 
-        public void Initialize(string deviceId, int bufferConfig)
+        public void Initialize(string deviceId, AudioRingBuffer ringBuffer)
         {
-            _deviceId = deviceId;
-            _bufferConfig = bufferConfig;
+            _deviceId = deviceId ?? throw new ArgumentNullException(nameof(deviceId));
+            _ringBuffer = ringBuffer ?? throw new ArgumentNullException(nameof(ringBuffer));
         }
 
         public void StartCapture()
@@ -87,17 +84,9 @@ namespace DuoAudio.Services
             }
         }
 
-        public byte[]? GetAudioBuffer()
-        {
-            lock (_bufferLock)
-            {
-                return _audioBuffer.Count > 0 ? _audioBuffer.Dequeue() : null;
-            }
-        }
-
         private void OnDataAvailable(object? sender, WaveInEventArgs e)
         {
-            if (e.BytesRecorded > 0 && e.Buffer != null)
+            if (e.BytesRecorded > 0 && e.Buffer != null && _ringBuffer != null)
             {
                 // Safety check: prevent buffer overflow
                 if (e.BytesRecorded > e.Buffer.Length)
@@ -114,21 +103,14 @@ namespace DuoAudio.Services
                     return;
                 }
 
-                var buffer = new byte[e.BytesRecorded];
-                Buffer.BlockCopy(e.Buffer, 0, buffer, 0, e.BytesRecorded);
+                // Write directly to ring buffer - no per-chunk allocation!
+                int bytesWritten = _ringBuffer.Write(e.Buffer, 0, e.BytesRecorded);
 
-                lock (_bufferLock)
+                if (bytesWritten < e.BytesRecorded)
                 {
-                    _audioBuffer.Enqueue(buffer);
-                    // Keep buffer size based on configuration
-                    var maxBuffers = GetMaxBuffersForConfig(_bufferConfig);
-                    while (_audioBuffer.Count > maxBuffers)
-                    {
-                        _audioBuffer.Dequeue();
-                    }
+                    // Buffer overflow - some data was discarded
+                    System.Diagnostics.Debug.WriteLine($"Ring buffer overflow: wrote {bytesWritten}/{e.BytesRecorded} bytes");
                 }
-
-                DataAvailable?.Invoke(this, buffer);
             }
         }
 
@@ -154,35 +136,22 @@ namespace DuoAudio.Services
         private bool IsDeviceDisconnectionError(Exception ex)
         {
             if (ex == null) return false;
-            
+
             // Check for common device disconnection error messages
             var errorMessage = ex.Message.ToLower();
-            return errorMessage.Contains("device") && 
-                   (errorMessage.Contains("disconnected") || 
+            return errorMessage.Contains("device") &&
+                   (errorMessage.Contains("disconnected") ||
                     errorMessage.Contains("not available") ||
                     errorMessage.Contains("not present") ||
                     errorMessage.Contains("invalid"));
         }
 
-        private int GetMaxBuffersForConfig(int config)
-        {
-            return config switch
-            {
-                1 => 2,  // Low Latency
-                2 => 2,  // Low-Medium
-                3 => 3,  // Balanced (default)
-                4 => 5,  // Medium-High
-                5 => 10, // High Stability
-                _ => 3   // Default to balanced
-            };
-        }
-
         public void Dispose()
         {
             if (_isDisposed) return;
-            
+
             StopCapture();
-            
+
             if (_capture != null)
             {
                 _capture.DataAvailable -= OnDataAvailable;
@@ -190,7 +159,7 @@ namespace DuoAudio.Services
                 _capture.Dispose();
                 _capture = null;
             }
-            
+
             _isDisposed = true;
         }
     }

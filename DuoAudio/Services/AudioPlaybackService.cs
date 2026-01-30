@@ -6,12 +6,12 @@ namespace DuoAudio.Services
     public class AudioPlaybackService : IAudioPlaybackService, IDisposable
     {
         private WasapiOut? _wasapiOut;
-        private BufferedWaveProvider? _bufferedWaveProvider;
+        private RingBufferWaveProvider? _ringBufferWaveProvider;
+        private AudioRingBuffer? _ringBuffer;
         private string? _deviceId;
         private bool _isPlaying;
         private readonly object _lockObject = new();
         private bool _isDisposed;
-        private int _bufferConfig = 3; // Default to balanced
 
         public bool IsPlaying => _isPlaying;
 
@@ -22,13 +22,13 @@ namespace DuoAudio.Services
 
         public void Initialize(string deviceId)
         {
-            Initialize(deviceId, 3); // Default to balanced
+            throw new InvalidOperationException("Use Initialize(string deviceId, AudioRingBuffer ringBuffer) instead.");
         }
 
-        public void Initialize(string deviceId, int bufferConfig)
+        public void Initialize(string deviceId, AudioRingBuffer ringBuffer)
         {
-            _deviceId = deviceId;
-            _bufferConfig = bufferConfig;
+            _deviceId = deviceId ?? throw new ArgumentNullException(nameof(deviceId));
+            _ringBuffer = ringBuffer ?? throw new ArgumentNullException(nameof(ringBuffer));
         }
 
         public void StartPlayback()
@@ -52,21 +52,16 @@ namespace DuoAudio.Services
 
                 // Get the device's actual format to match capture format
                 var waveFormat = device.AudioClient.MixFormat;
-                
-                // Create buffered wave provider for audio data
-                // Buffer duration based on configuration
-                var bufferDuration = GetBufferDurationForConfig(_bufferConfig);
-                _bufferedWaveProvider = new BufferedWaveProvider(waveFormat)
-                {
-                    BufferDuration = bufferDuration,
-                    DiscardOnBufferOverflow = true
-                };
 
-                // Create WASAPI output
-                // Latency based on configuration
-                var latency = GetLatencyForConfig(_bufferConfig);
+                // Create ring buffer wave provider for audio data
+                // This reads directly from the shared ring buffer
+                _ringBufferWaveProvider = new RingBufferWaveProvider(_ringBuffer!, waveFormat);
+
+                // Create WASAPI output with low latency
+                // Using 20ms latency for balanced performance
+                const int latency = 20;
                 _wasapiOut = new WasapiOut(device, AudioClientShareMode.Shared, false, latency);
-                _wasapiOut.Init(_bufferedWaveProvider);
+                _wasapiOut.Init(_ringBufferWaveProvider);
                 _wasapiOut.Play();
 
                 _isPlaying = true;
@@ -93,7 +88,7 @@ namespace DuoAudio.Services
                     _wasapiOut?.Dispose();
                     _wasapiOut = null;
 
-                    _bufferedWaveProvider = null;
+                    _ringBufferWaveProvider = null;
                     _isPlaying = false;
                     System.Diagnostics.Debug.WriteLine("Playback stopped successfully");
                 }
@@ -105,78 +100,12 @@ namespace DuoAudio.Services
             }
         }
 
-        public void QueueAudioBuffer(byte[] buffer)
-        {
-            try
-            {
-                lock (_lockObject)
-                {
-                    if (!_isPlaying || _bufferedWaveProvider == null)
-                        return;
-
-                    // Safety check: prevent null or empty buffers
-                    if (buffer == null || buffer.Length == 0)
-                        return;
-
-                    // Safety check: prevent buffer overflow
-                    const int maxBufferSize = 1024 * 1024; // 1MB max
-                    if (buffer.Length > maxBufferSize)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"Warning: Buffer size ({buffer.Length}) exceeds maximum ({maxBufferSize})");
-                        return;
-                    }
-
-                    try
-                    {
-                        _bufferedWaveProvider.AddSamples(buffer, 0, buffer.Length);
-                    }
-                    catch (Exception ex)
-                    {
-                        // Buffer might be full or other issue
-                        System.Diagnostics.Debug.WriteLine($"Error adding samples: {ex.Message}");
-                        System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Error in QueueAudioBuffer (outer): {ex.Message}");
-                System.Diagnostics.Debug.WriteLine($"Stack trace: {ex.StackTrace}");
-            }
-        }
-
         public void Dispose()
         {
             if (_isDisposed) return;
-            
+
             StopPlayback();
             _isDisposed = true;
-        }
-
-        private TimeSpan GetBufferDurationForConfig(int config)
-        {
-            return config switch
-            {
-                1 => TimeSpan.FromMilliseconds(10),  // Low Latency
-                2 => TimeSpan.FromMilliseconds(20),  // Low-Medium
-                3 => TimeSpan.FromMilliseconds(50),  // Balanced (default)
-                4 => TimeSpan.FromMilliseconds(100), // Medium-High
-                5 => TimeSpan.FromMilliseconds(200), // High Stability
-                _ => TimeSpan.FromMilliseconds(50)   // Default to balanced
-            };
-        }
-
-        private int GetLatencyForConfig(int config)
-        {
-            return config switch
-            {
-                1 => 10,  // Low Latency
-                2 => 20,  // Low-Medium
-                3 => 20,  // Balanced (default)
-                4 => 50,  // Medium-High
-                5 => 100, // High Stability
-                _ => 20   // Default to balanced
-            };
         }
     }
 }
