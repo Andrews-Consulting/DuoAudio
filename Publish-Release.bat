@@ -46,12 +46,6 @@ for /d %%D in ("publish\temp\*") do (
 REM Remove temp directory
 rmdir /s /q "publish\temp"
 
-REM Copy documentation files
-echo Copying documentation files...
-copy "DuoAudio\README.md" "publish\" >nul 2>&1
-copy "DuoAudio\USER_GUIDE.md" "publish\" >nul 2>&1
-copy "DuoAudio\TEST_RESULTS.md" "publish\" >nul 2>&1
-
 echo.
 echo ========================================
 echo   Publish completed successfully!
