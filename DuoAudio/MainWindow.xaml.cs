@@ -367,7 +367,7 @@ public partial class MainWindow : Window
                 int channels = 2;
                 int bytesPerSample = 2;
                 int bufferDurationMs = GetBufferDurationForConfig(bufferConfig);
-                int bufferSize = (sampleRate * channels * bytesPerSample * bufferDurationMs) / 1000;
+                int bufferSize = (sampleRate * channels * bytesPerSample * bufferDurationMs) / 10;      // was divided by 1000
 
                 // Create shared ring buffer
                 var ringBuffer = new AudioRingBuffer(bufferSize);

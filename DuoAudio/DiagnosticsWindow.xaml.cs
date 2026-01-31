@@ -25,49 +25,15 @@ namespace DuoAudio
             _deviceEnumerator = new AudioDeviceEnumerator();
             LoadDevices();
             CheckWindowsDefaultDevice();
-            UpdateLatencyDisplay();
             Log("Diagnostics window initialized");
         }
 
         public void SetBufferConfiguration(int config)
         {
             _currentBufferConfig = config;
-            UpdateLatencyDisplay();
         }
 
-        private int GetEstimatedLatency(int bufferConfig)
-        {
-            return bufferConfig switch
-            {
-                1 => 40,   // Low Latency: 10ms buffer + 10ms latency + 20ms overhead
-                2 => 60,   // Low-Medium: 20ms buffer + 20ms latency + 20ms overhead
-                3 => 100,  // Balanced: 50ms buffer + 20ms latency + 30ms overhead
-                4 => 200,  // Medium-High: 100ms buffer + 50ms latency + 50ms overhead
-                5 => 350,  // High Stability: 200ms buffer + 100ms latency + 50ms overhead
-                _ => 100   // Default to balanced
-            };
-        }
-
-        private string GetBufferConfigLabel(int config)
-        {
-            return config switch
-            {
-                1 => "Low Latency",
-                2 => "Low-Medium",
-                3 => "Balanced",
-                4 => "Medium-High",
-                5 => "High Stability",
-                _ => "Balanced"
-            };
-        }
-
-        private void UpdateLatencyDisplay()
-        {
-            var estimatedLatency = GetEstimatedLatency(_currentBufferConfig);
-            LatencyText.Text = $"{estimatedLatency}ms";
-            BufferConfigText.Text = GetBufferConfigLabel(_currentBufferConfig);
-            Log($"Estimated latency: {estimatedLatency}ms (buffer config: {_currentBufferConfig})");
-        }
+       
 
         private void LoadDevices()
         {
